@@ -44,6 +44,11 @@ function App() {
   const visibleRows = useMemo(
     () =>
       data
+        ?.filter((d) =>
+          d.name.official
+            .toLocaleLowerCase()
+            .includes(search.toLocaleLowerCase())
+        )
         ?.sort((a, b) =>
           sort === 0
             ? a.name.official.localeCompare(b.name.official)
@@ -51,7 +56,7 @@ function App() {
         )
         ?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [data, sort, page, rowsPerPage]
+    [data, sort, page, rowsPerPage, search]
   );
 
   const handleRowClick = (da: ICountry.ICountry) => {
@@ -90,46 +95,40 @@ function App() {
             <CircularProgress />
           </div>
         ) : (
-          visibleRows
-            ?.filter((d) =>
-              d.name.official
-                .toLocaleLowerCase()
-                .includes(search.toLocaleLowerCase())
-            )
-            .map((da) => (
-              <div
-                key={da.cca3}
-                className='grid items-center grid-cols-11 gap-4 px-4 py-2 my-4 rounded-md bg-slate-100'
+          visibleRows?.map((da) => (
+            <div
+              key={da.cca3}
+              className='grid items-center grid-cols-11 gap-4 px-4 py-2 my-4 rounded-md bg-slate-100'
+            >
+              <img
+                className='object-contain w-12 h-12'
+                src={da.flags.png}
+                alt=''
+              />
+              <p
+                className='col-span-2 underline hover:cursor-pointer hover:text-blue-500'
+                onClick={() => handleRowClick(da)}
               >
-                <img
-                  className='object-contain w-12 h-12'
-                  src={da.flags.png}
-                  alt=''
-                />
-                <p
-                  className='col-span-2 underline hover:cursor-pointer hover:text-blue-500'
-                  onClick={() => handleRowClick(da)}
-                >
-                  {da.name.official}
-                </p>
-                <p>{da.cca2}</p>
-                <p>{da.cca3}</p>
-                <p className='col-span-2'>
-                  {da?.name?.nativeName?.eng?.official || 'N/A'}
-                </p>
-                <div className='flex flex-wrap items-baseline col-span-3 space-x-1 space-y-1'>
-                  {da?.altSpellings.map((al, i) => (
-                    <p
-                      key={i}
-                      className='max-w-full px-2 py-1 ml-1 overflow-hidden text-sm bg-white rounded-full text-nowrap text-ellipsis'
-                    >
-                      {al}
-                    </p>
-                  ))}
-                </div>
-                <p>{da?.idd?.root}</p>
+                {da.name.official}
+              </p>
+              <p>{da.cca2}</p>
+              <p>{da.cca3}</p>
+              <p className='col-span-2'>
+                {da?.name?.nativeName?.eng?.official || 'N/A'}
+              </p>
+              <div className='flex flex-wrap items-baseline col-span-3 space-x-1 space-y-1'>
+                {da?.altSpellings.map((al, i) => (
+                  <p
+                    key={i}
+                    className='max-w-full px-2 py-1 ml-1 overflow-hidden text-sm bg-white rounded-full text-nowrap text-ellipsis'
+                  >
+                    {al}
+                  </p>
+                ))}
               </div>
-            ))
+              <p>{da?.idd?.root}</p>
+            </div>
+          ))
         )}
         <div className='sticky bottom-0 flex justify-center py-2 bg-white shadow-sm'>
           <Pagination
