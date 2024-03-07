@@ -1,10 +1,11 @@
 import axios from 'axios';
 import { useRequest } from 'ahooks';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { FaArrowUp, FaArrowDown } from 'react-icons/fa';
 
-import SearchInput from './components/SearchInput';
 import { CircularProgress, IconButton, Pagination } from '@mui/material';
+import SearchInput from './components/SearchInput';
+import DetailDialog, { IDetailDialogRef } from './components/DetailDialog';
 
 const listCountry = async () => {
   const res = await axios.get<ICountry.ICountry[]>(
@@ -21,6 +22,8 @@ const listCountry = async () => {
 const rowsPerPage = 25;
 
 function App() {
+  const dialogRef = useRef<IDetailDialogRef>(null);
+
   const { data, loading: loadingListCountry } = useRequest(listCountry);
   console.log('data:', data);
 
@@ -51,17 +54,23 @@ function App() {
     [data, sort, page, rowsPerPage]
   );
 
+  const handleRowClick = (da: ICountry.ICountry) => {
+    console.log('handleRowClick:', da);
+    dialogRef.current?.open(da);
+  };
+
   return (
     <div className=''>
+      <DetailDialog ref={dialogRef} />
       <div className='sticky top-0 py-3 bg-white shadow-sm'>
-        <div className='container max-w-4xl mx-auto flex justify-center'>
+        <div className='container flex justify-center max-w-4xl mx-auto'>
           <SearchInput onSearchChange={(text) => setSearch(text)} />
         </div>
       </div>
       <div className='container max-w-4xl mx-auto mt-4'>
         <div className='grid grid-cols-11 items-center gap-4 my-4 px-4 py-2 bg-slate-100 rounded-md sticky top-[64px] shadow-sm'>
           <p>Flag</p>
-          <div className='col-span-2 flex items-center'>
+          <div className='flex items-center col-span-2'>
             <p>Country Name</p>
             <IconButton
               size='small'
@@ -90,24 +99,29 @@ function App() {
             .map((da) => (
               <div
                 key={da.cca3}
-                className='grid grid-cols-11 items-center gap-4 my-4 px-4 py-2 bg-slate-100 rounded-md'
+                className='grid items-center grid-cols-11 gap-4 px-4 py-2 my-4 rounded-md bg-slate-100'
               >
                 <img
-                  className='w-12 h-12 object-contain'
+                  className='object-contain w-12 h-12'
                   src={da.flags.png}
                   alt=''
                 />
-                <p className='col-span-2'>{da.name.official}</p>
+                <p
+                  className='col-span-2 underline hover:cursor-pointer hover:text-blue-500'
+                  onClick={() => handleRowClick(da)}
+                >
+                  {da.name.official}
+                </p>
                 <p>{da.cca2}</p>
                 <p>{da.cca3}</p>
                 <p className='col-span-2'>
                   {da?.name?.nativeName?.eng?.official || 'N/A'}
                 </p>
-                <div className='col-span-3 flex flex-wrap items-baseline space-x-1 space-y-1'>
+                <div className='flex flex-wrap items-baseline col-span-3 space-x-1 space-y-1'>
                   {da?.altSpellings.map((al, i) => (
                     <p
                       key={i}
-                      className='bg-white rounded-full ml-1 px-2 py-1 text-nowrap text-ellipsis overflow-hidden max-w-full text-sm'
+                      className='max-w-full px-2 py-1 ml-1 overflow-hidden text-sm bg-white rounded-full text-nowrap text-ellipsis'
                     >
                       {al}
                     </p>
@@ -117,7 +131,7 @@ function App() {
               </div>
             ))
         )}
-        <div className='sticky bottom-0 flex justify-center bg-white shadow-sm py-2'>
+        <div className='sticky bottom-0 flex justify-center py-2 bg-white shadow-sm'>
           <Pagination
             count={(data?.length || 0) / rowsPerPage}
             color='primary'
