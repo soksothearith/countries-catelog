@@ -41,14 +41,17 @@ function App() {
     }
   }, [search]);
 
+  const filteredRows = useMemo(
+    () =>
+      data?.filter((d) =>
+        d.name.official.toLocaleLowerCase().includes(search.toLocaleLowerCase())
+      ),
+    [data, search]
+  );
+
   const visibleRows = useMemo(
     () =>
-      data
-        ?.filter((d) =>
-          d.name.official
-            .toLocaleLowerCase()
-            .includes(search.toLocaleLowerCase())
-        )
+      filteredRows
         ?.sort((a, b) =>
           sort === 0
             ? a.name.official.localeCompare(b.name.official)
@@ -56,7 +59,7 @@ function App() {
         )
         ?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [data, sort, page, rowsPerPage, search]
+    [filteredRows, sort, page, rowsPerPage]
   );
 
   const handleRowClick = (da: ICountry.ICountry) => {
@@ -132,7 +135,7 @@ function App() {
         )}
         <div className='sticky bottom-0 flex justify-center py-2 bg-white shadow-sm'>
           <Pagination
-            count={(data?.length || 0) / rowsPerPage}
+            count={Math.ceil((filteredRows?.length || 0) / rowsPerPage)}
             color='primary'
             page={page + 1}
             onChange={handleChangePage}
